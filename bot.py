@@ -71,7 +71,7 @@ for i in delegates:
         if name in last_msg:
             last_msg[name]['timer'] = 0
 
-            if last_msg[name]['id']:
+            if last_msg[name]['Not forging']:
                 last_msg = send.GoodMessage(name, last_msg)
 
     # Finally forming and sending a message

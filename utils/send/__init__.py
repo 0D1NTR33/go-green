@@ -4,7 +4,8 @@ from data import config
 
 telegram_config = config.telegram
 telegram_debug = config.telegram_debug
-ryver_config = config.ryver
+ryver_config = config.ryverTest
+discord_config = config.discord
 
 delete = True
 
@@ -19,6 +20,13 @@ html_syntax = {
     'bold_close': '</b>',
     'italic': '<i>',
     'italic_close': '</i>'
+}
+
+discord_syntax = {
+    'bold': '**',
+    'bold_close': '**',
+    'italic': '*',
+    'italic_close': '*'
 }
 
 good_msg = (
@@ -63,6 +71,8 @@ def FormingAGoodMessage(name, last_msg, messenger):
         syntax = html_syntax
     if 'ryver' in messenger:
         syntax = markdown_syntax
+    if 'discord' in messenger:
+        syntax = discord_syntax
 
     not_forging_time = last_msg[name]['Not forging']
     smile = ChooseClockSmile(not_forging_time)
@@ -78,6 +88,8 @@ def FormingABadMessage(i, delegates, missed_block, messenger):
         syntax = html_syntax
     if 'ryver' in messenger:
         syntax = markdown_syntax
+    if 'discord' in messenger:
+        syntax = discord_syntax
 
     m = []
 
@@ -98,6 +110,8 @@ def GoodMessage(name, last_msg):
 
     Sends a message to the Telegram if delegate is forging now.
     Prints a message with Telegram response for logs.
+
+    Sends a message to the Discord if delegate is forging now.
     """
 
     if telegram_config['enabled']:
@@ -112,6 +126,12 @@ def GoodMessage(name, last_msg):
         messengers.Ryver(ryver_config, message)
         print('Ryver:\n' + message)
 
+    if discord_config['enabled']:
+        message = FormingAGoodMessage(name, last_msg, 'discord')
+        messengers.Discord(discord_config, message)
+
+    last_msg[name]['Not forging'] = ''
+
     return last_msg
 
 
@@ -123,6 +143,8 @@ def BadMessage(name, last_msg, i, delegates, missed_block):
 
     Sends a message with alert to the Telagram.
     Prints a message with Telegram response for logs.
+
+    Sends a message with alert to the Discord.
     """
 
     if telegram_config['enabled']:
@@ -140,6 +162,10 @@ def BadMessage(name, last_msg, i, delegates, missed_block):
         print('Ryver:\n' + message)
         # Saving an ID of the sent message
         last_msg[name]['id'] = json.loads(rv_response.text)['d']['id']
+
+    if discord_config['enabled']:
+        message = FormingABadMessage(i, delegates, missed_block, 'discord')
+        messengers.Discord(discord_config, message)
 
     return last_msg
 

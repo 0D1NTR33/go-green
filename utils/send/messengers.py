@@ -58,28 +58,18 @@ def Ryver(keys, message, delete=False):
 
 def Discord(keys, message):
     """
-    Post a message to discord api via a bot.
-    Bot must be added to the server and have write access to the channel.
-    You may need to connect with a websocket the first time you run the bot
-    You can use a library like discord.py to do so.
+    Post a message to discord API via a Webhook.
     """
 
-    # enable dev mode on discord, right-click on the channel, copy ID
-    channelID = keys['Channel ID']
-    # get from the bot page. must be a bot, not a discord app
-    botToken = keys['Bot token']
+    url = keys['webhook_url']
 
-    baseURL = (
-        'https://discordapp.com/api/channels/{}/messages'
-        .format(channelID)
-    )
-    headers = {
-        'Authorization': 'Bot {}'.format(botToken),
-        'User-Agent': 'myBotThing (http://some.url, v0.1)',
-        'Content-Type': 'application/json'
+    payload = {
+        "content": message
     }
 
-    POSTedJSON = json.dumps({'content': message})
+    headers = {
+        'Content-Type': 'application/json',
+    }
 
-    response = requests.post(baseURL, headers=headers, data=POSTedJSON)
+    response = requests.post(url, data=json.dumps(payload), headers=headers)
     return response

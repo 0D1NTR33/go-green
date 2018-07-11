@@ -32,7 +32,7 @@ script running once in 15 minutes
 recurring message will be sent every 6 hours
 """
 # Delay for recurring messages
-timeout = 23
+timeout = 3
 
 """
 Please be sure that you type 'True' or 'False' with a capital letter.
@@ -51,9 +51,9 @@ You can find your ID or ID of chat or channel by using @get_id_bot bot.
 """
 # Telegram bot data for posting messages
 telegram = {
-    "enabled": False,
-    "apiKey": "",
-    "chat_id": ""
+    'enabled': False,
+    'apiKey': '',
+    'chat_id': ''
 }
 
 """
@@ -61,9 +61,9 @@ Can be used same bot, but just another chat or channel.
 """
 # Telegram bot data for logs
 telegram_debug = {
-    "enabled": False,
-    "apiKey": "",
-    "chat_id": ""
+    'enabled': False,
+    'apiKey': '',
+    'chat_id': ''
 }
 
 """
@@ -76,9 +76,20 @@ Bot should be added to the forum manually.
 """
 # Ryver data for posting messages
 ryver = {
-    "enabled": False,
-    "projectName": "shiftnrg",
-    "forumID": "1094320",
-    "login": "",
-    "password": ""
+    'enabled': False,
+    'projectName': 'shiftnrg',
+    'forumID': '1094320',
+    'login': '',
+    'password': ''
+}
+
+"""
+Discord webhook url.
+You can setup it in you server settings.
+Server Settings -> Webhooks -> Create Webhook
+"""
+# Discord settings
+discord = {
+    'enabled': True,
+    'webhook_url': ''
 }
