@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Licensed under MIT License <see LICENSE file>
+
 import requests
 import base64
 import json

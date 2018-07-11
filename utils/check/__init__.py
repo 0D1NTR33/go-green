@@ -1,7 +1,12 @@
+# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Licensed under MIT License <see LICENSE file>
+
 import time
+
 from data import config
 
 timeout = config.timeout
+threshold = config.threshold
 
 
 def OrangeAndRed(delegates_table):
@@ -62,19 +67,6 @@ def TimeStamp():
     return start_time
 
 
-def Finished(start_time):
-    """
-    Returns string with time of script running atm
-    """
-
-    finished = (
-        'Finished in ~' + str(round(time.perf_counter() - start_time, 1)) +
-        ' seconds'
-    )
-
-    return finished
-
-
 def Username(i, name, delegates, usernames):
     """
     Returns delegates dictionary with username of delegate
@@ -89,7 +81,7 @@ def Username(i, name, delegates, usernames):
     return delegates
 
 
-def Timeout(last_msg, name, fake, last_block_time):
+def Timeout(last_msg, name, fake, last_block_time, next_turn_time):
     """
     Returns boolean with delay and last_msg dictionary.
     Delay is True if timer of a delegate is not equal '0'.
@@ -107,7 +99,12 @@ def Timeout(last_msg, name, fake, last_block_time):
             delay = True
             last_msg[name]['timer'] -= 1
         else:
-            last_msg[name]['timer'] = timeout
+            if int(next_turn_time[0]) <= threshold:
+                delay = True
+            elif 'sec' == next_turn_time[1]:
+                delay = True
+            else:
+                last_msg[name]['timer'] = timeout
 
         # Adding a data with not forging time for the good message
         non_f_time = last_block_time
@@ -121,3 +118,27 @@ def Timeout(last_msg, name, fake, last_block_time):
             last_msg[name]['timer'] = 0
 
     return delay, last_msg
+
+
+def Finished(start_time):
+    """
+    Returns string with time of script running atm
+    """
+
+    finished = (
+        'Finished in ~' + str(round(time.perf_counter() - start_time, 1)) +
+        ' seconds'
+    )
+
+    return finished
+
+
+def Logs(delegates, delegates_mirror, start_time):
+    m_d = []
+    m_d.append('Delegates:\n' + str(delegates) + '\n\n')
+    m_d.append('Delegates mirror:\n' + str(delegates_mirror) + '\n\n')
+    finished = Finished(start_time)
+    m_d.append(finished)
+    message_debug = ''.join(m_d)
+
+    return message_debug

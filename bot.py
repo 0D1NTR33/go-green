@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Licensed under MIT License <see LICENSE file>
 
 import json
 from os import path
@@ -24,26 +25,14 @@ try:
 except:
     pass
 
-telegram_debug = config.telegram_debug
-
 url = config.explorer[0]
 url_mirror = config.explorer[1]
 max_attempts = 10
 
-delegates = {}
-delegates_table_mirror = {}
-delegates_mirror = {}
+""" Main script """
 
-"""
-    Main script
-"""
-
-delegates = get.Delegates_table(url, max_attempts)
-delegates_table_mirror = get.Delegates_table(url_mirror, max_attempts)
-
-delegates_mirror = check.OrangeAndRed(delegates_table_mirror)
-
-m_d = []
+delegates = get.DelegatesRedAndOrange(url, max_attempts)
+delegates_mirror = get.DelegatesRedAndOrange(url_mirror, max_attempts)
 
 for i in delegates:
     message = ''
@@ -59,12 +48,13 @@ for i in delegates:
     if not_forging or missed_block:
         delegates = check.Username(i, name, delegates, usernames)
         last_block_time = delegates[i]['lastBlockTime'].split(' ')
+        next_turn_time = delegates[i]['NextTurn'].split(' ')
 
         fake = check.isFake(i, delegates_mirror, last_block_time)
 
     # Adding a delay for recurring messages for delegate
         delay, last_msg = check.Timeout(
-            last_msg, name, fake, last_block_time
+            last_msg, name, fake, last_block_time, next_turn_time
         )
     # Reset the timer if delegate is forging now and send a good message
     else:
@@ -78,22 +68,11 @@ for i in delegates:
     if (not_forging or missed_block) and not delay:
         last_msg = send.BadMessage(name, last_msg, i, delegates, missed_block)
 
-    # Forming a message for Telegram logs
-    if telegram_debug['enabled']:
-        if not_forging or missed_block:
-            m_d.append(
-                send.FormingABadMessage(i, delegates, missed_block, 'telegram')
-            )
-
 # Saving last messages to a file
 with open(last_msg_path, mode='w', encoding='utf-8') as f:
     json.dump(last_msg, f)
 
-finished = check.Finished(start_time)
-message_debug = send.TelegramDebug(telegram_debug, m_d, finished)
-
-# Printing a messages for logs
-if telegram_debug['enabled']:
-    print('\nDebug:\n' + message_debug)
-else:
-    print(finished)
+# Logs
+message_debug = check.Logs(delegates, delegates_mirror, start_time)
+send.TelegramDebug(message_debug)
+print('\nDebug:\n' + message_debug)

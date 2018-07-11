@@ -1,5 +1,9 @@
+# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Licensed under MIT License <see LICENSE file>
+
 import json
-from utils.send import messengers
+
+from . import messengers
 from data import config
 
 telegram_config = config.telegram
@@ -129,6 +133,7 @@ def GoodMessage(name, last_msg):
     if discord_config['enabled']:
         message = FormingAGoodMessage(name, last_msg, 'discord')
         messengers.Discord(discord_config, message)
+        print('Discord:\n' + message)
 
     last_msg[name]['Not forging'] = ''
 
@@ -166,21 +171,16 @@ def BadMessage(name, last_msg, i, delegates, missed_block):
     if discord_config['enabled']:
         message = FormingABadMessage(i, delegates, missed_block, 'discord')
         messengers.Discord(discord_config, message)
+        print('Discord:\n' + message)
 
     return last_msg
 
 
-def TelegramDebug(telegram_debug, m_d, finished):
+def TelegramDebug(message):
     """
     Sends all messages to Telegram even it's fake messages without any delay.
     Returns a message for logs.
     """
 
-    debug_message = ''
-
     if telegram_debug['enabled']:
-        m_d.append(finished)
-        debug_message = ''.join(m_d)
-        messengers.Telegram(telegram_debug, debug_message)
-
-    return debug_message
+        messengers.Telegram(telegram_debug, message)

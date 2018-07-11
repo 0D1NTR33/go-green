@@ -1,6 +1,4 @@
-"""
-    Config file
-"""
+""" Config file """
 
 """
 Please be sure you haven't slash ('/') at the end of an explorer link,
@@ -32,7 +30,20 @@ script running once in 15 minutes
 recurring message will be sent every 6 hours
 """
 # Delay for recurring messages
-timeout = 3
+timeout = 23
+
+"""
+Next time turn threshold delay for sending message.
+
+Example:
+threshold = 29
+Explorer shows a delegate with missed block or not forging status.
+Message will be sent only if time to next turn is greater then 29.
+
+If set 45 or greater, messages will not be sent ever.
+"""
+# Values between 1 and 45
+threshold = 29
 
 """
 Please be sure that you type 'True' or 'False' with a capital letter.
