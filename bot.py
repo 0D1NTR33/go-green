@@ -29,12 +29,6 @@ try:
         last_msg = json.load(f)
 except:
     pass
-finally:
-    if 'id' not in last_msg:
-        last_msg['id'] = '0'
-
-    if 'timer' not in last_msg:
-        last_msg['timer'] = {}
 
 telegram_config = config.telegram
 telegram_debug = config.telegram_debug
@@ -57,9 +51,14 @@ delegates_table_mirror = get.Delegates_table(url_mirror, max_attempts)
 
 delegates_mirror = check.OrangeAndRed(delegates_table_mirror)
 
-m = []
 m_d = []
+good_msg = ''
+delete = True
+
 for i in delegates:
+    message = ''
+    m = []
+
     not_forging = 'Not forging' in delegates[i]['Status']
     missed_block = 'Missed block' in delegates[i]['Status']
     name = delegates[i]['Name']
@@ -69,40 +68,48 @@ for i in delegates:
     if not_forging or missed_block:
         last_block_time = delegates[i]['lastBlockTime'].split(' ')
 
-        if 'seconds' in last_block_time:
-            fake = True
-
-        if 'minute' in last_block_time:
-            fake = True
-
-        if 'minutes' in last_block_time and int(last_block_time[0]) < 45:
-            fake = True
-
-        if i not in delegates_mirror:
-            fake = True
+        fake = check.isFake(i, delegates_mirror, last_block_time)
 
     # Adding a delay for recurring messages for delegate
         if not fake:
-            if name not in last_msg['timer']:
-                last_msg['timer'][name] = 0
+            if name not in last_msg:
+                last_msg[name] = {}
+                last_msg[name]['id'] = ''
+                last_msg[name]['timer'] = 0
 
-            if last_msg['timer'][name] > 0:
-                last_msg['timer'][name] -= 1
+            if last_msg[name]['timer'] > 0:
+                last_msg[name]['timer'] -= 1
                 fake = True
             else:
-                last_msg['timer'][name] = timeout
+                last_msg[name]['timer'] = timeout
         else:
-            if name in last_msg['timer']:
-                last_msg['timer'][name] = 0
-    # Reset the timer if delegate is forging
+            if name in last_msg:
+                last_msg[name]['timer'] = 0
+    # Reset the timer if delegate is forging and send good message
     else:
-        if name in last_msg['timer']:
-            last_msg['timer'][name] = 0
+        if name in last_msg:
+            last_msg[name]['timer'] = 0
 
-    # Finally forming a message
+            if last_msg[name]['id']:
+                if ryver_config['enabled']:
+                    send.Ryver(ryver_config, last_msg[name]['id'], delete)
+                    last_msg[name]['id'] = ''
+
+                    good_msg = (
+                        '**{name}** is forging now! :white_check_mark:'
+                        .format(name=name)
+                    )
+                    send.Ryver(ryver_config, good_msg)
+                    print('Ryver:\n' + good_msg)
+
+                if telegram_config['enabled']:
+                    tg_response = send.Telegram(telegram_config, good_msg)
+                    print('Telegram: ', tg_response, '\n')
+
+    # Finally forming and sending a message
     if (not_forging or missed_block) and not fake:
-        if delegates[i]['Name'] in usernames:
-            delegates[i]['Username'] = usernames[delegates[i]['Name']]
+        if name in usernames:
+            delegates[i]['Username'] = usernames[name]
         else:
             delegates[i]['Username'] = ('_Please send '
                                         'your Ryver username to_ @mx')
@@ -116,6 +123,22 @@ for i in delegates:
             .format(**delegates[i])
         )
 
+        message = ''.join(m)
+
+        if ryver_config['enabled']:
+            # Deleting of the last sent message
+            send.Ryver(ryver_config, last_msg[name]['id'], delete)
+            print('Message deleted: ID_{id}\n'.format(id=last_msg[name]['id']))
+            # Sending a message to the Ryver forum
+            rv_response = send.Ryver(ryver_config, message)
+            print('Ryver:\n' + message)
+            # Saving an ID of the sent message
+            last_msg[name]['id'] = json.loads(rv_response.text)['d']['id']
+
+        if telegram_config['enabled']:
+            tg_response = send.Telegram(telegram_config, message)
+            print('Telegram: ', tg_response, '\n')
+
     # Forming a message for Telegram logs
     if telegram_debug['enabled']:
         if not_forging or missed_block:
@@ -128,25 +151,6 @@ for i in delegates:
                 '<b>Next turn:</b> {NextTurn}\n\n'
                 .format(**delegates[i])
             )
-
-message = ''.join(m)
-delete = True
-
-if ryver_config['enabled']:
-    # Checking if message is not empty
-    if message:
-        # Deleting of the last sent message
-        # send.Ryver(ryver_config, last_msg['id'], delete)
-        print('Message deleted: ID_{id}\n'.format(id=last_msg['id']))
-        # Sending a message to the Ryver forum
-        rv_response = send.Ryver(ryver_config, message)
-        # Saving an ID of the sent message
-        last_msg['id'] = json.loads(rv_response.text)['d']['id']
-
-if telegram_config['enabled']:
-    if message:
-        tg_response = send.Telegram(telegram_config, message)
-        print('Telegram: ', tg_response, '\n')
 
 # Saving last messages to a file
 with open(last_msg_path, mode='w', encoding='utf-8') as f:
@@ -163,8 +167,6 @@ if telegram_debug['enabled']:
     send.Telegram(telegram_debug, debug_message)
 
 # Printing a messages for logs
-print('Ryver:\n' + message)
-
 if telegram_debug['enabled']:
     print('Debug:\n' + debug_message)
 else:

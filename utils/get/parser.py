@@ -49,36 +49,13 @@ def Delegates_table(url, max_attempts, options=options):
             driver.get(url)
             wait = WebDriverWait(driver, 10)
 
-            """
-            Trying to open Delegate Monitor from main page.
-            But it's not working. Selenium can't click to
-            dropdown menu selector.
-            """
-            # Opening an explorer's main page
-            # wait.until(
-            #     EC.presence_of_element_located((
-            #         By.CSS_SELECTOR, "a.tools-menu"
-            #     ))
-            # )
-            # Clicking to a "Tools" dropdown menu
-            # element_to_click = driver.find_element_by_xpath(
-            #     '//*[@id="main-menu-dropdown"]'
-            # )
-            # actions.click(element_to_click).pause(5).perform()
-
-            # # Clicking to "Delegate monitor" link
-            # element_to_click = driver.find_element_by_xpath(
-            #     '//*[@id="header"]/div[2]/ul/li[2]/ul/li[3]'
-            # )
-            # actions.move_to_element(element_to_click).click().perform()
-
             # Waiting until a delegates table will be definitely loaded
             wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "i.green"))
             )
             """
             Waiting for explorer to be shure there all is okay
-            Some times explorer shows delegates_table as "Missed block"
+            Sometimes explorer shows delegates_table as "Missed block"
             or "Not forging" when it's not after fast loading.
             """
             actions.pause(5)
