@@ -36,6 +36,7 @@ def Delegates(url, max_attempts, options=options):
 
     for i in range(max_attempts):
         try:
+            # driver = webdriver.Chrome(chrome_options=options)
             driver = webdriver.Chrome(
                 chrome_options=options,
                 executable_path=r'/usr/local/bin/chromedriver'
@@ -43,6 +44,31 @@ def Delegates(url, max_attempts, options=options):
             actions = ActionChains(driver)
             driver.get(url)
             wait = WebDriverWait(driver, 10)
+
+            """
+            Trying to open Delegate Monitor from main page.
+            But it's not working. Selenium can't click to
+            dropdown menu selector.
+            """
+            # Opening an explorer's main page
+            # wait.until(
+            #     EC.presence_of_element_located((
+            #         By.CSS_SELECTOR, "a.tools-menu"
+            #     ))
+            # )
+            # Clicking to a "Tools" dropdown menu
+            # element_to_click = driver.find_element_by_xpath(
+            #     '//*[@id="main-menu-dropdown"]'
+            # )
+            # actions.click(element_to_click).pause(5).perform()
+
+            # # Clicking to "Delegate monitor" link
+            # element_to_click = driver.find_element_by_xpath(
+            #     '//*[@id="header"]/div[2]/ul/li[2]/ul/li[3]'
+            # )
+            # actions.move_to_element(element_to_click).click().perform()
+
+            # Waiting until a delegates table will be definitely loaded
             wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "i.red"))
             )
@@ -90,12 +116,18 @@ def Delegates(url, max_attempts, options=options):
                 i += 1
             break
         except Exception as ex:
-            print('Error #' + str(attempt) + ':')
+            print('Error #{num}:'.format(num=attempt))
             print(ex)
-            driver.quit()
+            try:
+                driver.quit()
+            except:
+                pass
             attempt += 1
             # time.sleep(215) # ~100 times per 6 hours
             pass
         finally:
-            driver.quit()
-            return delegates
+            try:
+                driver.quit()
+            except:
+                pass
+    return delegates
