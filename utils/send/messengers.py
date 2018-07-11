@@ -9,7 +9,7 @@ def Telegram(keys, message):
     # &parse_mode=Markdown
     url = (
         'https://api.telegram.org/bot{apiKey}/sendMessage?chat_id={chat_id}'
-        '&text={msg}'.format(msg=message, **keys)
+        '&parse_mode=HTML&text={msg}'.format(msg=message, **keys)
     )
     response = requests.get(url)
     return response

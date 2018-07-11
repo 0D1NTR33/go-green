@@ -17,13 +17,13 @@ options.add_argument('--disable-extensions')
 options.add_argument('--disable-dev-shm-usage')
 
 
-def Delegates(url, max_attempts, options=options):
+def Delegates_table(url, max_attempts, options=options):
     """
     Getting a data from Explorer's Delegate Monitor page.
     Using Selenium Web Browser Automation tool.
     This function starts a Chrome browser in headless mode.
-    Then waits until delegates table loaded,
-    then it saves data from each delegates row.
+    Then waits until delegates_table table loaded,
+    then it saves data from each delegates_table row.
     Such data as 'Name', 'NextTurn', metadata from 'Circle'
     and time of the last forged block from 'Status' column.
     This function don't work with Firefox browser, because
@@ -31,19 +31,19 @@ def Delegates(url, max_attempts, options=options):
 
     """
 
-    delegates = {}
+    delegates_table = {}
     attempt = 0
 
     for i in range(max_attempts):
         try:
             # For Windows
-            driver = webdriver.Chrome(chrome_options=options)
+            # driver = webdriver.Chrome(chrome_options=options)
 
             # For Linux
-            # driver = webdriver.Chrome(
-            #     chrome_options=options,
-            #     executable_path=r'/usr/local/bin/chromedriver'
-            # )
+            driver = webdriver.Chrome(
+                chrome_options=options,
+                executable_path=r'/usr/local/bin/chromedriver'
+            )
 
             actions = ActionChains(driver)
             driver.get(url)
@@ -78,35 +78,47 @@ def Delegates(url, max_attempts, options=options):
             )
             """
             Waiting for explorer to be shure there all is okay
-            Some times explorer shows delegates as "Missed block"
+            Some times explorer shows delegates_table as "Missed block"
             or "Not forging" when it's not after fast loading.
             """
             actions.pause(5)
 
             i = 1
             while i <= 101:
-                delegates[i] = {}
+                delegates_table[i] = {}
 
                 elem = driver.find_element_by_xpath(
                     '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
                     '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[2]/a'
                     .format(i)
                 ).get_attribute("innerHTML")
-                delegates[i]['Name'] = str(elem)
+                delegates_table[i]['Name'] = str(elem)
 
                 elem = driver.find_element_by_xpath(
                     '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
                     '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[5]'
                     .format(i)
                 ).get_attribute("innerHTML")
-                delegates[i]['NextTurn'] = str(elem)
+                delegates_table[i]['NextTurn'] = str(elem)
 
                 elem = driver.find_element_by_xpath(
                     '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
                     '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[6]/i'
                     .format(i)
                 ).get_attribute("outerHTML")
-                delegates[i]['Circle'] = str(elem)
+
+                forging = 'green' in str(elem)
+                not_forging = 'red' in str(elem)
+                missed_block = 'orange' in str(elem)
+
+                if forging:
+                    delegates_table[i]['Status'] = 'Forging'
+
+                if not_forging:
+                    delegates_table[i]['Status'] = 'Not forging'
+
+                if missed_block:
+                    delegates_table[i]['Status'] = 'Missed block'
 
                 # Hovering over a circle to get status info visible
                 element_to_hover_over = driver.find_element_by_xpath(
@@ -120,7 +132,9 @@ def Delegates(url, max_attempts, options=options):
                     '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[6]'
                     '/div/div[2]'.format(i)
                 ).get_attribute("innerHTML")
-                delegates[i]['lastBlockTime'] = str(elem).split('<br>')[2]
+                delegates_table[i]['lastBlockTime'] = (
+                    str(elem).split('<br>')[2]
+                )
 
                 actions.reset_actions()
                 i += 1
@@ -141,4 +155,4 @@ def Delegates(url, max_attempts, options=options):
                 driver.quit()
             except:
                 pass
-    return delegates
+    return delegates_table

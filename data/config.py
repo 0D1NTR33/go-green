@@ -26,15 +26,16 @@ Also, bot resets the counter after each sent message.
 counter = 2
 
 """
-If timeout '1' it means if we have a message
-it will be sent only on the 2-nd run of the script.
+Timeout '1' mean if we have a message it will be sent,
+but next will be sent only on the 3-rd run of the script.
+
 Workmode:
 timeout = 7
 script running once in 15 minutes
-messege will be sent every 2 hours
+recurring message will be sent every 2 hours
 """
-# Here a comment for timeout
-timeout = 7
+# Delay for recurring messages
+timeout = 21
 
 """
 Please be sure that you type 'True' or 'False' with a capital letter.
@@ -42,15 +43,21 @@ Also, it shouldn't have any type of brackets.
 """
 # Telegram bot data
 telegram = {
-    "enabled": False,
-    "debug": False,
+    "enabled": True,
+    "apiKey": "",
+    "chat_id": ""
+}
+
+# Telegram bot data
+telegram_debug = {
+    "enabled": True,
     "apiKey": "",
     "chat_id": ""
 }
 
 # Ryver data
 ryver = {
-    "enabled": False,
+    "enabled": True,
     "projectName": "shiftnrg",
     "forumID": "1094320",
     "login": "",
