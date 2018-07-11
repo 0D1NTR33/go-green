@@ -8,7 +8,7 @@ from data import config
 
 telegram_config = config.telegram
 telegram_debug = config.telegram_debug
-ryver_config = config.ryverTest
+ryver_config = config.ryver
 discord_config = config.discord
 
 delete = True
