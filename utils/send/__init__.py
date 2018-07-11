@@ -1,5 +1,7 @@
 import json
-# import utils.send.messengers as messengers
+from utils.send import messengers
+
+good_msg = '**{name}** is forging now! :white_check_mark:'
 
 
 def RyverBadMessage(ryver_config, name, message, last_msg):
@@ -24,24 +26,32 @@ def TelegramBadMessage(telegram_config, message):
         print('Telegram: ', tg_response, '\n')
 
 
-def RyverGoodMessage(ryver_config, name, good_msg, last_msg):
+def RyverGoodMessage(ryver_config, name, last_msg):
     delete = True
 
     if ryver_config['enabled']:
         messengers.Ryver(ryver_config, last_msg[name]['id'], delete)
         last_msg[name]['id'] = ''
-
-        good_msg = (
-            '**{name}** is forging now! :white_check_mark:'
-            .format(name=name)
-        )
-        messengers.Ryver(ryver_config, good_msg)
+        message = good_msg.format(name=name)
+        messengers.Ryver(ryver_config, message)
         print('Ryver:\n' + good_msg)
 
     return last_msg
 
 
-def TelegramGoodMessage(telegram_config, good_msg):
+def TelegramGoodMessage(telegram_config, name):
     if telegram_config['enabled']:
-        tg_response = messengers.Telegram(telegram_config, good_msg)
+        message = good_msg.format(name=name)
+        tg_response = messengers.Telegram(telegram_config, message)
         print('Telegram: ', tg_response, '\n')
+
+
+def TelegramDebug(telegram_debug, m_d, finished):
+    debug_message = ''
+
+    if telegram_debug['enabled']:
+        m_d.append(finished)
+        debug_message = ''.join(m_d)
+        messengers.Telegram(telegram_debug, debug_message)
+
+    return debug_message

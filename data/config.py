@@ -1,5 +1,5 @@
 """
-Config file
+    Config file
 """
 
 """
@@ -47,7 +47,7 @@ telegram_debug = {
 ryver = {
     "enabled": False,
     "projectName": "shiftnrg",
-    "forumID": "1094320",
+    "forumID": "",
     "login": "",
     "password": ""
 }

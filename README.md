@@ -1,4 +1,4 @@
-# GoGreen bot v0.1.5
+# GoGreen bot v0.1.6
 *The bot for a Shift Project Ryver chat.*
 
 Bot uses Selenium Web Browser Automation tool to parse Shift Explorer's Delegate Monitor page.
