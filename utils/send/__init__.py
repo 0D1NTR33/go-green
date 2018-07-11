@@ -73,6 +73,7 @@ def ChooseClockSmile(time):
     if 'day' in time:
         return ':triangular_flag_on_post:'
 
+    # Replace to :facepalm:
     if 'days' in time:
         return ':space_invader:'
 
