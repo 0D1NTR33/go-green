@@ -11,68 +11,121 @@ from data import config
 
 start_time = check.TimeStamp()
 
-dir = path.abspath(path.dirname(__file__))
-usernames_path = path.join(dir, 'data', 'usernames.json')
-last_msg_path = path.join(dir, 'data', 'last_msg.json')
+DIR_PATH = path.abspath(path.dirname(__file__))
+USERNAMES_PATH = path.join(DIR_PATH, 'data', 'usernames.json')
+LAST_MSG_PATH = path.join(DIR_PATH, 'data', 'last_msg.json')
 
-with open(usernames_path, 'r', encoding='utf-8') as f:
+with open(USERNAMES_PATH, 'r', encoding='utf-8') as f:
     usernames = json.load(f)
+
 # Trying to open last_msg.json file even it's empty
 try:
     last_msg = {}
-    with open(last_msg_path, 'r', encoding='utf-8') as f:
+    with open(LAST_MSG_PATH, 'r', encoding='utf-8') as f:
         last_msg = json.load(f)
 except:
     pass
 
 url = config.explorer[0]
 url_mirror = config.explorer[1]
+timeout = config.timeout
+
+double_checking = True
 max_attempts = 10
 
 """ Main script """
 
-delegates = get.DelegatesRedAndOrange(url, max_attempts)
-delegates_mirror = get.DelegatesRedAndOrange(url_mirror, max_attempts)
+try:
+    # Checking explorers` online
+    explorer_online = check.isOnline(url, 3, 5)
+    explorer_mirror_online = check.isOnline(url_mirror, 3, 5)
 
-for i in delegates:
-    message = ''
-    delay = True
+    if 'explorers' not in last_msg:
+        last_msg['explorers'] = {}
+        last_msg['explorers']['online'] = True
 
-    not_forging = 'Not forging' in delegates[i]['Status']
-    missed_block = 'Missed block' in delegates[i]['Status']
-    name = delegates[i]['Name']
+    if double_checking and (not explorer_online or not explorer_mirror_online):
 
-    # Checking for a fake message
-    fake = False
+        last_msg, delay = check.explorersTimeout(last_msg)
+        last_msg['explorers']['online'] = False
 
-    if not_forging or missed_block:
-        delegates = check.Username(i, name, delegates, usernames)
-        last_block_time = delegates[i]['lastBlockTime'].split(' ')
-        next_turn_time = delegates[i]['NextTurn'].split(' ')
+        if not delay:
+            send.explorersBadMessage(
+                last_msg, url, url_mirror, explorer_online,
+                explorer_mirror_online
+            )
 
-        fake = check.isFake(i, delegates_mirror, last_block_time)
-
-    # Adding a delay for recurring messages for delegate
-        delay, last_msg = check.Timeout(
-            last_msg, name, fake, last_block_time, next_turn_time
+        message_explorers = send.formingExplorersMessage(
+            url, url_mirror, explorer_online, explorer_mirror_online,
+            'telegram',
         )
-    # Reset the timer if delegate is forging now and send a good message
-    else:
-        if name in last_msg:
-            last_msg[name]['timer'] = 0
+        send.TelegramDebug(message_explorers, 'Explorers')
 
-            if last_msg[name]['Not forging']:
-                last_msg = send.GoodMessage(name, last_msg)
+        # Saving data to a file
+        with open(LAST_MSG_PATH, mode='w', encoding='utf-8') as f:
+            json.dump(last_msg, f)
 
-    # Finally forming and sending a message
-    if (not_forging or missed_block) and not delay:
-        last_msg = send.BadMessage(name, last_msg, i, delegates, missed_block)
+        # Exit from the script
+        raise SystemExit
 
-# Saving last messages to a file
-with open(last_msg_path, mode='w', encoding='utf-8') as f:
-    json.dump(last_msg, f)
+    # Sending a good message if both explorers is online now
+    if not last_msg['explorers']['online']:
+        last_msg = send.explorersGoodMessage(
+                last_msg, url, url_mirror, explorer_online,
+                explorer_mirror_online
+            )
 
-# Logs
-message_debug = check.Logs(delegates, delegates_mirror, start_time)
-send.TelegramDebug(message_debug)
-print('\nDebug:\n' + message_debug)
+    # Checking delegates
+    delegates = get.DelegatesRedAndOrange(url, max_attempts)
+    delegates_mirror = get.DelegatesRedAndOrange(url_mirror, max_attempts)
+
+    for i in delegates:
+        delay = True
+        fake = False
+
+        # Checking for a fake message
+        fake = check.isFake(i, delegates, delegates_mirror)
+
+        # Adding a delay for recurring messages for a delegate
+        delay, last_msg = check.Timeout(last_msg, i, delegates, fake)
+
+        # Finally forming and sending a message
+        if not delay:
+            delegates = check.Username(i, delegates, usernames)
+            last_msg = send.BadMessage(last_msg, i, delegates)
+
+    # Send a good message if delegate is forging now and delete from last_msg
+    red_and_orange_names = check.RedAndOrangeNames(delegates)
+    red_and_orange_names_mirror = check.RedAndOrangeNames(delegates_mirror)
+
+    to_del = []
+    for n in last_msg:
+        if n == 'explorers':
+            continue
+
+        delegate_is_forging_now = (
+            n not in red_and_orange_names and
+            n not in red_and_orange_names_mirror
+        )
+
+        if delegate_is_forging_now:
+            to_del.append(n)
+            send.GoodMessage(n, last_msg)
+
+    for n in to_del:
+        del last_msg[n]
+
+    # Logs
+    message_debug = check.Logs(
+        delegates, delegates_mirror, start_time, last_msg
+    )
+    send.TelegramDebug(message_debug, 'Log')
+except Exception:
+    import traceback
+
+    message_error = traceback.format_exc()
+    send.TelegramDebug(message_error, 'Error')
+finally:
+    # Saving last messages to a file
+    with open(LAST_MSG_PATH, mode='w', encoding='utf-8') as f:
+        json.dump(last_msg, f)

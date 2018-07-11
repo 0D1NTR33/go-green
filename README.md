@@ -1,9 +1,8 @@
-# GoGreen bot v 0.1.9
+# GoGreen bot v 0.2.0
 
-Bot uses Selenium Web Browser Automation tool to scrap delegate statuses from Shift Explorer's Delegate Monitor page.
+Script uses Selenium Web Browser Automation tool to scrap delegates` statuses from Shift Explorer's Delegate Monitor page.
 
-Bot can send the data to Ryver, Telegram and Discord.
-Bot gathering and sends messages with delegates who has status 'Not forging' or 'Missed block' on TestNet or MainNet.
+Script can send the data to Ryver, Telegram and Discord with delegates who has status 'Not forging' or 'Missed block' on TestNet or MainNet.
 
 ### Example:
 > _Missed block_
@@ -15,8 +14,8 @@ Bot gathering and sends messages with delegates who has status 'Not forging' or 
 >**Next turn:** 43 min 33 sec
 
 ### ToDo
-* Checking explorer's online.
 * Do OOP and more pythonic.
+* Asynchrony.
 * Tests.
 * Package and documentation.
 

@@ -1,23 +1,19 @@
 """ Config file """
 
 """
-Please be sure you haven't slash ('/') at the end of an explorer link,
-because in this case a Delegate Monitor tool page can't load a data.
-I guess, it's kind of a bug.
-
 Atm you can't check is explorer synchronised or not.
 Therefore, for a double-checking uses 2 explorers.
 """
 # Tuple of explorers
 explorer = (
-    'https://explorer.testnet.shiftnrg.org/delegateMonitor',
-    'https://testnet.shiftnrg.com.mx/delegateMonitor'
+    'https://explorer.testnet.shiftnrg.org',
+    'https://testnet.shiftnrg.com.mx'
 )
 
 """
 Number of active delegates on explorer's delegateMonitor page.
 """
-# Delegates to check
+# Number of delegates to check
 active_delegates = 101
 
 """
@@ -26,24 +22,25 @@ but next will be sent only on the 3-rd run of the script.
 
 Workmode:
 timeout = 23
-script running once in 15 minutes
-recurring message will be sent every 6 hours
+Script running once in 15 minutes.
+Recurring message will be sent every 6 hours.
 """
 # Delay for recurring messages
-timeout = 23
+timeout = 3
 
 """
-Next time turn threshold delay for sending message.
+'Next time turn' threshold delay for sending message.
 
 Example:
-threshold = 29
-Explorer shows a delegate with missed block or not forging status.
-Message will be sent only if time to next turn is greater then 29.
+treshold = 25
+Explorer shows a delegate with 'Not forging' status.
+Message will be sent only if time to next turn is greater then 25.
+Hovewer, if status is 'Missed block' message will be sent anyway.
 
-If set 45 or greater, messages will not be sent ever.
+If set 45 or greater, messages for status 'Not forging' will not be sent ever.
 """
 # Values between 1 and 45
-threshold = 29
+threshold = 25
 
 """
 Please be sure that you type 'True' or 'False' with a capital letter.
@@ -101,6 +98,6 @@ Server Settings -> Webhooks -> Create Webhook
 """
 # Discord settings
 discord = {
-    'enabled': True,
+    'enabled': False,
     'webhook_url': ''
 }

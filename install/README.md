@@ -1,4 +1,4 @@
-# GoGreen bot v 0.1.9
+# GoGreen bot v 0.2.0
 ## Installation Guide
 
 1. Clone this repository to your server:
