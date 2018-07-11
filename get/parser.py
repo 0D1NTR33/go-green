@@ -36,11 +36,15 @@ def Delegates(url, max_attempts, options=options):
 
     for i in range(max_attempts):
         try:
+            # For Windows
             # driver = webdriver.Chrome(chrome_options=options)
+
+            # For Linux
             driver = webdriver.Chrome(
                 chrome_options=options,
                 executable_path=r'/usr/local/bin/chromedriver'
             )
+
             actions = ActionChains(driver)
             driver.get(url)
             wait = WebDriverWait(driver, 10)

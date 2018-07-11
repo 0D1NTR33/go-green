@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# import sys
 import time
 import json
 from os import path
 
-from data import config as config
-from get import parser as get
-from send import messengers as send
+import get.parser as get
+import send.messengers as send
+from data import config
 
 start_time = time.perf_counter()
 timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -36,6 +35,7 @@ ryver_config = config.ryver
 url = config.explorer[0]
 max_attempts = 10
 
+delegates = {}
 delegates = get.Delegates(url, max_attempts)
 
 # 'STATUS': 'CIRCLE' => "Forging": "green", "Awaiting slot (ok)": "green".
@@ -49,8 +49,24 @@ for i in delegates:
     not_forging = 'red' in delegates[i]['Circle']
     # missed_block = 'orange' in delegates[i]['Circle']
 
+    # Checking for a fake message
     # if not_forging or missed_block:
+    fake = False
     if not_forging:
+        forging_time = delegates[i]['ForgingTime'].split(' ')
+
+        if 'seconds' in forging_time:
+            fake = True
+
+        if 'minute' in forging_time:
+            fake = True
+
+        if 'minutes' in forging_time and int(forging_time[0]) < 45:
+            fake = True
+
+    # if not_forging or missed_block and not fake:
+    if not_forging and not fake:
+
         if delegates[i]['Name'] in usernames:
             delegates[i]['Username'] = usernames[delegates[i]['Name']]
         else:
@@ -84,14 +100,22 @@ if ryver_config['enabled']:
             json.dump(last_msg, f)
 
 if telegram_config['enabled']:
+    if telegram_config['debug']:
+        finished = (
+            'Finished in ~' + str(round(time.perf_counter() - start_time, 1)) +
+            ' seconds'
+        )
+        m.append(finished)
+        message = ''.join(m)
     if message:
         send.Telegram(telegram_config, message)
 
-# Printing a message for logs
+# Printing a messages for logs
 print(message)
 
-finished = (
-    'Finished in ' + str(round(time.perf_counter() - start_time, 1)) +
-    ' seconds'
-)
-print(finished)
+if not telegram_config['debug']:
+    finished = (
+        'Finished in ~' + str(round(time.perf_counter() - start_time, 1)) +
+        ' seconds'
+    )
+    print(finished)

@@ -19,14 +19,15 @@ Also, it shouldn't have any type of brackets.
 """
 # Telegram bot data
 telegram = {
-    "enabled": False,
+    "enabled": True,
+    "debug": True,
     "apiKey": "",
     "chat_id": ""
 }
 
 # Ryver data
 ryver = {
-    "enabled": False,
+    "enabled": True,
     "projectName": "shiftnrg",
     "forumID": "1094320",
     "login": "",
