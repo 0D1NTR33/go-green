@@ -1,4 +1,4 @@
-# GoGreen bot v0.1.2
+# GoGreen bot v0.1.3
 *The bot for a Shift Project Ryver chat.*
 
 Bot uses Selenium Web Browser Automation tool to parse Shift Explorer's Delegate Monitor page.
@@ -8,8 +8,6 @@ Bot can send the data to Ryver's chat forum and to Telegram.
 In **v0.1.0** bot gathering and sends messages with delegates who has status 'Not forging' or 'Missed block' on Shift TestNet.
 
 ### Example:
-
->_Missed block_
 
 >Delegate: **name** / @username
 

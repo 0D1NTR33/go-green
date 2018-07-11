@@ -24,7 +24,7 @@ def Delegates(url, max_attempts, options=options):
     This function starts a Chrome browser in headless mode.
     Then waits until delegates table loaded,
     then it saves data from each delegates row.
-    Such data as 'Name', 'ForgingTime', metadata from 'Circle'
+    Such data as 'Name', 'NextTurn', metadata from 'Circle'
     and time of the last forged block from 'Status' column.
     This function don't work with Firefox browser, because
     in gecodriver an action 'move_to_element' don't scroll the page.
@@ -37,13 +37,13 @@ def Delegates(url, max_attempts, options=options):
     for i in range(max_attempts):
         try:
             # For Windows
-            # driver = webdriver.Chrome(chrome_options=options)
+            driver = webdriver.Chrome(chrome_options=options)
 
             # For Linux
-            driver = webdriver.Chrome(
-                chrome_options=options,
-                executable_path=r'/usr/local/bin/chromedriver'
-            )
+            # driver = webdriver.Chrome(
+            #     chrome_options=options,
+            #     executable_path=r'/usr/local/bin/chromedriver'
+            # )
 
             actions = ActionChains(driver)
             driver.get(url)
@@ -74,8 +74,14 @@ def Delegates(url, max_attempts, options=options):
 
             # Waiting until a delegates table will be definitely loaded
             wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "i.red"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, "i.green"))
             )
+            """
+            Waiting for explorer to be shure there all is okay
+            Some times explorer shows delegates as "Missed block"
+            or "Not forging" when it's not after fast loading.
+            """
+            actions.pause(5)
 
             i = 1
             while i <= 101:
@@ -93,7 +99,7 @@ def Delegates(url, max_attempts, options=options):
                     '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[5]'
                     .format(i)
                 ).get_attribute("innerHTML")
-                delegates[i]['ForgingTime'] = str(elem)
+                delegates[i]['NextTurn'] = str(elem)
 
                 elem = driver.find_element_by_xpath(
                     '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
@@ -122,14 +128,15 @@ def Delegates(url, max_attempts, options=options):
         except Exception as ex:
             print('Error #{num}:'.format(num=attempt))
             print(ex)
+            # Catching exeption when driver is not assigned
             try:
                 driver.quit()
             except:
                 pass
             attempt += 1
-            # time.sleep(215) # ~100 times per 6 hours
             pass
         finally:
+            # Catching exeption when driver is not assigned
             try:
                 driver.quit()
             except:
