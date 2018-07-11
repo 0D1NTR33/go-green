@@ -1,11 +1,11 @@
-# GoGreen bot v0.1.6
+# GoGreen bot v 0.1.7
 *The bot for a Shift Project Ryver chat.*
 
-Bot uses Selenium Web Browser Automation tool to parse Shift Explorer's Delegate Monitor page.
+Bot uses Selenium Web Browser Automation tool to scrap delegate statuses from Shift Explorer's Delegate Monitor page.
 
+In **v 0.1.7**
 Bot can send the data to Ryver's chat forum and to Telegram.
-
-In **v0.1.4** bot gathering and sends messages with delegates who has status 'Not forging' or 'Missed block' on Shift TestNet or MainNet.
+Bot gathering and sends messages with delegates who has status 'Not forging' or 'Missed block' on Shift TestNet or MainNet.
 
 ### Example:
 > _Missed block_
@@ -14,12 +14,31 @@ In **v0.1.4** bot gathering and sends messages with delegates who has status 'No
 
 >Last block forged: **an hour ago**
 
->**Next turn:** 13 min 3 sec
+>**Next turn:** 43 min 33 sec
 
+### ToDo
+* Do OOP and more pythonic.
+* Tests.
+* Package and documentation.
 
-### ToDo:
-* Before run on the MainNet to implement a double-check of delegates' status from several sources.
+### Donations
 
-## Contacts
+- [x] Please consider voting for [Mx](https://explorer.shiftnrg.org/delegate/4446910057799968777S)
+
+I'll also be happy to recieve some tips.
+
+* **SHIFT: 4446910057799968777S**
+* LISK: 3426025300407045514L
+* ARK: Aebm3iSzBwK3EEWhQpABTwkke362MQC6Eo
+* BTC: 3GkxcV1d7zd4WshtC4RWj59k5ux5TT12V9
+* LTC: MRRS7NUcE6mxKZNtAFk9Za6fNeipfcpg7c
+* ETH: 0x6d5ebaddaa116e01d9c29c695b9ad8c9f634fa04
+* DASH: Xrt5kHnpAyXcDXc5NmHdFSxfEaN5ngKC9b
+
+Thank you :tada:
+
+### [Installation](https://github.com/MxShift/go-green/tree/master/install)
+
+### Contacts
 * Telegram: [Mx](https://t.me/voteformx)
 * Ryver: [Mx](https://shiftnrg.ryver.com)

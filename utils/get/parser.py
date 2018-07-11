@@ -8,6 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 
+from data import config
+
 options = ChromeOptions()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
@@ -15,6 +17,8 @@ options.add_argument('start-maximized')
 options.add_argument('disable-infobars')
 options.add_argument('--disable-extensions')
 options.add_argument('--disable-dev-shm-usage')
+
+number_of_delegates = config.active_delegates
 
 
 def Delegates_table(url, max_attempts, options=options):
@@ -28,7 +32,6 @@ def Delegates_table(url, max_attempts, options=options):
     and time of the last forged block from 'Status' column.
     This function don't work with Firefox browser, because
     in gecodriver an action 'move_to_element' don't scroll the page.
-
     """
 
     delegates_table = {}
@@ -61,7 +64,7 @@ def Delegates_table(url, max_attempts, options=options):
             actions.pause(5)
 
             i = 1
-            while i <= 101:
+            while i <= number_of_delegates:
                 delegates_table[i] = {}
 
                 elem = driver.find_element_by_xpath(

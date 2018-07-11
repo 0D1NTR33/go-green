@@ -1,10 +1,13 @@
 import time
+from data import config
+
+timeout = config.timeout
 
 
 def OrangeAndRed(delegates_table):
     """
-    Sorting delegates from delegates table with 'Not forging'
-    and 'Missed block' status.
+    Sorts delegates from delegates table with 'Not forging'
+    and 'Missed block' statuses.
 
     'STATUS': 'CIRCLE' =>
     "Forging": "green", "Awaiting slot (ok)": "green".
@@ -26,7 +29,7 @@ def OrangeAndRed(delegates_table):
 
 def isFake(i, delegates_mirror, last_block_time):
     """
-    Checking a delegate's info to be shure it's not a bug.
+    Checks a delegate's info to be shure it's not a bug.
     Sometimes explorer shows delegates_table as "Missed block"
     or "Not forging" when it's not.
     """
@@ -47,6 +50,10 @@ def isFake(i, delegates_mirror, last_block_time):
 
 
 def TimeStamp():
+    """
+    Prints timestamp line and returns time of script's start
+    """
+
     start_time = time.perf_counter()
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
     timestamp_line = ('\n{:+^72}\n'.format(' '+str(timestamp)+' '))
@@ -56,6 +63,10 @@ def TimeStamp():
 
 
 def Finished(start_time):
+    """
+    Returns string with time of script running atm
+    """
+
     finished = (
         'Finished in ~' + str(round(time.perf_counter() - start_time, 1)) +
         ' seconds'
@@ -65,6 +76,11 @@ def Finished(start_time):
 
 
 def Username(i, name, delegates, usernames):
+    """
+    Returns delegates dictionary with username of delegate
+    from usernames.json file.
+    """
+
     if name in usernames:
         delegates[i]['Username'] = usernames[name]
     else:
@@ -73,19 +89,34 @@ def Username(i, name, delegates, usernames):
     return delegates
 
 
-def Timeout(last_msg, name, fake, timeout, delay=False):
+def Timeout(last_msg, name, fake, last_block_time):
+    """
+    Returns boolean with delay and last_msg dictionary.
+    Delay is True if timer of a delegate is not equal '0'.
+    """
+
     if not fake:
+        delay = False
+
         if name not in last_msg:
             last_msg[name] = {}
             last_msg[name]['id'] = ''
             last_msg[name]['timer'] = 0
 
         if last_msg[name]['timer'] > 0:
-            last_msg[name]['timer'] -= 1
             delay = True
+            last_msg[name]['timer'] -= 1
         else:
             last_msg[name]['timer'] = timeout
+
+        # Adding a data with not forging time for the good message
+        non_f_time = last_block_time
+        non_f_time.remove('ago')
+        last_msg[name]['Not forging'] = ' '.join(non_f_time)
+
     else:
+        delay = True
+
         if name in last_msg:
             last_msg[name]['timer'] = 0
 

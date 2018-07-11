@@ -1,13 +1,137 @@
 import json
 from utils.send import messengers
+from data import config
 
-good_msg = '**{name}** is forging now! :white_check_mark:'
+telegram_config = config.telegram
+telegram_debug = config.telegram_debug
+ryver_config = config.ryver
+
+delete = True
+
+markdown_syntax = {
+    'bold': '**',
+    'bold_close': '**',
+    'italic': '_',
+    'italic_close': '_'
+}
+html_syntax = {
+    'bold': '<b>',
+    'bold_close': '</b>',
+    'italic': '<i>',
+    'italic_close': '</i>'
+}
+
+good_msg = (
+    '{bold}{name}{bold_close} is now green! :white_check_mark: \n'
+    'Not forging time: {bold}{time}{bold_close} {smile}'
+)
+
+missed_block_string = '{italic}Missed block{italic_close}\n'
+
+bad_msg = (
+    'Delegate: {bold}{Name}{bold_close} / @{Username}\n'
+    'Last block forged: {bold}{lastBlockTime}{bold_close}\n'
+    '{bold}Next turn:{bold_close} {NextTurn}\n\n'
+)
 
 
-def RyverBadMessage(ryver_config, name, message, last_msg):
-    delete = True
+def ChooseClockSmile(time):
+    clock = ':clock{num}:'
+
+    time = time.split(' ')
+
+    if 'hour' in time:
+        return clock.format(num=1)
+
+    if 'hours' in time and int(time[0]) <= 12:
+        return clock.format(num=time[0])
+
+    if 'hours' in time and int(time[0]) > 12:
+        return ':mantelpiece_clock:'
+
+    if 'day' in time:
+        return ':triangular_flag_on_post:'
+
+    if 'days' in time:
+        return ':space_invader:'
+
+    return ':hourglass:'
+
+
+def FormingAGoodMessage(name, last_msg, messenger):
+    if 'telegram' in messenger:
+        syntax = html_syntax
+    if 'ryver' in messenger:
+        syntax = markdown_syntax
+
+    not_forging_time = last_msg[name]['Not forging']
+    smile = ChooseClockSmile(not_forging_time)
+    message = good_msg.format(
+        name=name, time=not_forging_time, smile=smile, **syntax
+    )
+
+    return message
+
+
+def FormingABadMessage(i, delegates, missed_block, messenger):
+    if 'telegram' in messenger:
+        syntax = html_syntax
+    if 'ryver' in messenger:
+        syntax = markdown_syntax
+
+    m = []
+
+    if missed_block:
+        m.append(missed_block_string.format(**syntax))
+
+    m.append(bad_msg.format(**delegates[i], **syntax))
+    message = ''.join(m)
+
+    return message
+
+
+def GoodMessage(name, last_msg):
+    """
+    Sends a message to the Ryver if delegate is forging now.
+    Returns last_msg dictionary
+    with delegate name and empty id of sent message.
+
+    Sends a message to the Telegram if delegate is forging now.
+    Prints a message with Telegram response for logs.
+    """
+
+    if telegram_config['enabled']:
+        message = FormingAGoodMessage(name, last_msg, 'telegram')
+        tg_response = messengers.Telegram(telegram_config, message)
+        print('Telegram: ', tg_response, '\n' + message + '\n')
 
     if ryver_config['enabled']:
+        messengers.Ryver(ryver_config, last_msg[name]['id'], delete)
+        last_msg[name]['id'] = ''
+        message = FormingAGoodMessage(name, last_msg, 'ryver')
+        messengers.Ryver(ryver_config, message)
+        print('Ryver:\n' + message)
+
+    return last_msg
+
+
+def BadMessage(name, last_msg, i, delegates, missed_block):
+    """
+    Sends a message with alert to the Ryver chat.
+    Prints messages for logs.
+    Returns last_msg dictionary with delegate name and id of sent message.
+
+    Sends a message with alert to the Telagram.
+    Prints a message with Telegram response for logs.
+    """
+
+    if telegram_config['enabled']:
+        message = FormingABadMessage(i, delegates, missed_block, 'telegram')
+        tg_response = messengers.Telegram(telegram_config, message)
+        print('Telegram: ', tg_response, '\n' + message + '\n')
+
+    if ryver_config['enabled']:
+        message = FormingABadMessage(i, delegates, missed_block, 'ryver')
         # Deleting of the last sent message
         messengers.Ryver(ryver_config, last_msg[name]['id'], delete)
         print('Message deleted: ID_{id}\n'.format(id=last_msg[name]['id']))
@@ -20,33 +144,12 @@ def RyverBadMessage(ryver_config, name, message, last_msg):
     return last_msg
 
 
-def TelegramBadMessage(telegram_config, message):
-    if telegram_config['enabled']:
-        tg_response = messengers.Telegram(telegram_config, message)
-        print('Telegram: ', tg_response, '\n')
-
-
-def RyverGoodMessage(ryver_config, name, last_msg):
-    delete = True
-
-    if ryver_config['enabled']:
-        messengers.Ryver(ryver_config, last_msg[name]['id'], delete)
-        last_msg[name]['id'] = ''
-        message = good_msg.format(name=name)
-        messengers.Ryver(ryver_config, message)
-        print('Ryver:\n' + good_msg)
-
-    return last_msg
-
-
-def TelegramGoodMessage(telegram_config, name):
-    if telegram_config['enabled']:
-        message = good_msg.format(name=name)
-        tg_response = messengers.Telegram(telegram_config, message)
-        print('Telegram: ', tg_response, '\n')
-
-
 def TelegramDebug(telegram_debug, m_d, finished):
+    """
+    Sends all messages to Telegram even it's fake messages without any delay.
+    Returns a message for logs.
+    """
+
     debug_message = ''
 
     if telegram_debug['enabled']:
