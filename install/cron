@@ -1,7 +1,7 @@
 crontab -e
 
-# Start GoGreen Bot every 15 minutes
+# Start GoGreen Notifier every 15 minutes
 */15 * * * * python3 ~/go-green/bot.py >> ~/go-green/bot.log 2>&1
 
-# Start GoGreen Bot every 1 minute without overlapse
+# Start GoGreen Notifier every 1 minute without overlapse
 * * * * * /usr/bin/pgrep -f ~/go-green/bot.py >> ~/go-green/bot.log 2>&1 || python3 ~/go-green/bot.py >> ~/go-green/bot.log 2>&1

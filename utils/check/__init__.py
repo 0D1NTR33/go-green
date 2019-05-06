@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Copyright (c) 2018-2019 Mx (Shift Project delegate / 4446910057799968777S)
 # Licensed under MIT License <see LICENSE file>
 
 import time
@@ -89,8 +89,7 @@ def Username(i, delegates, usernames):
     if name in usernames:
         delegates[i]['Username'] = usernames[name]
     else:
-        delegates[i]['Username'] = ('_Please send '
-                                    'your Ryver username to_ @mx')
+        delegates[i]['Username'] = ('NEWBIE')
     return delegates
 
 
@@ -136,8 +135,8 @@ def Timeout(last_msg, i, delegates, fake):
     if fake:
         delay = True
 
-        if name in last_msg:
-            last_msg[name]['timer'] = 0
+        # if name in last_msg:
+        #     last_msg[name]['timer'] = 0
 
     return delay, last_msg
 

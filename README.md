@@ -1,4 +1,4 @@
-# GoGreen bot v 0.2.0
+# GoGreen Notifier v 0.3.0
 
 Script uses Selenium Web Browser Automation tool to scrap delegates` statuses from Shift Explorer's Delegate Monitor page.
 
@@ -13,6 +13,11 @@ Script can send the data to Ryver, Telegram and Discord with delegates who has s
 
 >**Next turn:** 43 min 33 sec
 
+Also it updates Discord audio channel to show the number of not forging delegates.
+
+### Example:
+> Not Forging: 1
+
 ### ToDo
 * Do OOP and more pythonic.
 * Asynchrony.
@@ -26,7 +31,6 @@ Script can send the data to Ryver, Telegram and Discord with delegates who has s
 I'll also be happy to recieve some tips.
 
 * **SHIFT: 4446910057799968777S**
-* ETH: 0x6d5ebaddaa116e01d9c29c695b9ad8c9f634fa04
 
 Thank you :tada:
 
@@ -34,4 +38,4 @@ Thank you :tada:
 
 ### Contacts
 * Telegram: [Mx](https://t.me/voteformx)
-* Ryver: [Mx](https://shiftnrg.ryver.com)
+* Discord: [Mx](https://discord.gg/84SwuSz)

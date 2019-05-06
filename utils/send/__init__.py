@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Copyright (c) 2018-2019 Mx (Shift Project delegate / 4446910057799968777S)
 # Licensed under MIT License <see LICENSE file>
 
 import json
@@ -9,7 +9,11 @@ from data import config
 telegram_config = config.telegram
 telegram_debug = config.telegram_debug
 ryver_config = config.ryver
-discord_config = config.discord
+
+if config.discord:
+    discord_config = config.discord
+else:
+    discord_config = config.discord_wh
 
 delete = True
 
@@ -17,34 +21,51 @@ markdown_syntax = {
     'bold': '**',
     'bold_close': '**',
     'italic': '_',
-    'italic_close': '_'
+    'italic_close': '_',
+    'out': ':heavy_minus_sign:',
+    'in': ':heavy_plus_sign:',
+    'check_mark': ':white_check_mark:'
 }
 
 html_syntax = {
     'bold': '<b>',
     'bold_close': '</b>',
     'italic': '<i>',
-    'italic_close': '</i>'
+    'italic_close': '</i>',
+    'out': '%E2%9E%96',
+    'in': '%E2%9E%95',
+    'check_mark': '%E2%9C%85',
+    'd1': '',
+    'd2': '',
+    'separator': ''
 }
 
 discord_syntax = {
     'bold': '**',
     'bold_close': '**',
     'italic': '*',
-    'italic_close': '*'
+    'italic_close': '*',
+    'out': ':outbox_tray:',
+    'in': ':inbox_tray:',
+    'check_mark': ':white_check_mark:',
+    'd1': '<',
+    'd2': '>',
+    'separator': ':wavy_dash:'
 }
 
 good_msg = (
-    '{bold}{name}{bold_close} is now green! :white_check_mark: \n'
-    'Not forging time: {bold}{time}{bold_close} {smile}'
+    '{bold}{name}{bold_close} is now green! {check_mark} \n'
+    'Not forging time: {bold}{time}{bold_close} {smile}\n'
+    '{separator}'
 )
 
 missed_block_string = '{italic}Missed block{italic_close}\n'
 
 bad_msg = (
-    'Delegate: {bold}{Name}{bold_close} / @{Username}\n'
+    'Delegate: {bold}{Name}{bold_close} / {d1}@{Username}{d2}\n'
     'Last block forged: {bold}{lastBlockTime}{bold_close}\n'
-    '{bold}Next turn:{bold_close} {NextTurn}\n\n'
+    '{bold}Next turn:{bold_close} {NextTurn}\n'
+    '{separator}'
 )
 
 message_explorers = (
@@ -62,13 +83,13 @@ def ChooseClockSmile(time):
     time = time.split(' ')
 
     if 'hour' in time:
-        return ':angry_unicorn:'
+        return ':zap:'
 
     if 'hours' in time and int(time[0]) <= 12:
         return clock.format(num=time[0])
 
     if 'hours' in time and int(time[0]) > 12:
-        return ':mantelpiece_clock:'
+        return ':clock:'
 
     if 'day' in time:
         return ':triangular_flag_on_post:'
@@ -110,7 +131,7 @@ def FormingABadMessage(i, delegates, missed_block, messenger):
     if missed_block:
         m.append(missed_block_string.format(**syntax))
 
-    m.append(bad_msg.format(**delegates[i], **syntax))
+    m.append(bad_msg.format(**syntax, **delegates[i]))
     message = ''.join(m)
 
     return message
@@ -140,6 +161,7 @@ def GoodMessage(name, last_msg):
         print('Ryver:\n' + message)
 
     if discord_config['enabled']:
+        messengers.Discord(discord_config, last_msg[name]['id'], delete)
         message = FormingAGoodMessage(name, last_msg, 'discord')
         messengers.Discord(discord_config, message)
         print('Discord:\n' + message)
@@ -178,23 +200,41 @@ def BadMessage(last_msg, i, delegates):
 
     if discord_config['enabled']:
         message = FormingABadMessage(i, delegates, missed_block, 'discord')
-        messengers.Discord(discord_config, message)
+        # Deleting of the last sent message
+        if last_msg[name]['id']:
+            messengers.Discord(discord_config, last_msg[name]['id'], delete)
+            print('Message deleted: ID_{id}\n'.format(id=last_msg[name]['id']))
+        dc_response = messengers.Discord(discord_config, message)
+
+        try:
+            last_msg[name]['id'] = json.loads(dc_response.text)['id']
+        except:
+            last_msg[name]['timer'] = 0
+            msg = ('Discord Message Not Sent: ' + str(dc_response))
+            TelegramDebug(msg, 'Error')
+
         print('Discord:\n' + message)
 
     return last_msg
 
 
-def TelegramDebug(message, type):
+def TelegramDebug(message, m_type, disable_notification=True):
     """
     Sends all messages to Telegram even it's fake messages without any delay.
     Returns a message for logs.
     """
 
-    log = '\n{type}: \n{msg}'.format(type=type, msg=message)
+    tg_config = telegram_debug
+
+    if m_type == 'Alert':
+        tg_config = telegram_config
+
+    log = '\n{type}: \n{msg}'.format(type=m_type, msg=message)
 
     if telegram_debug['enabled']:
-        messengers.Telegram(telegram_debug, message)
-        print(log)
+        # tg_mgs = message.split('Exception: ')[1]
+        tg_response = messengers.Telegram(tg_config, log, None, disable_notification)
+        print('Telegram: ', tg_response, '\n' + log + '\n')
     else:
         print(log)
 
@@ -294,3 +334,45 @@ def formingExplorersMessage(
         message = message.replace(' not', '')
 
     return message
+
+
+def forgersMessage(delegate_name, direction):
+    """
+    Sends a message to the Ryver, Telegram and Discord
+    if delegate is IN or OUT of 101.
+    """
+
+    if direction == 'out':
+        message = (
+            '{out} {bold}{delegate}{bold_close}'
+            ' is {bold}OUT{bold_close} of 101'
+        )
+
+    if direction == 'in':
+        message = (
+            '{in} {bold}{delegate}{bold_close} is {bold}IN{bold_close} 101'
+        )
+
+    if telegram_config['enabled']:
+        tg_message = message.format(delegate=delegate_name, **html_syntax)
+        tg_response = messengers.Telegram(telegram_config, tg_message)
+        print('Telegram: ', tg_response, '\n' + tg_message + '\n')
+
+    if ryver_config['enabled']:
+        ryv_message = message.format(delegate=delegate_name, **markdown_syntax)
+        messengers.Ryver(ryver_config, ryv_message)
+        print('Ryver:\n' + ryv_message)
+
+    if discord_config['enabled']:
+        dis_message = message.format(delegate=delegate_name, **discord_syntax)
+        messengers.Discord(discord_config, dis_message)
+        print('Discord:\n' + dis_message)
+
+
+def ChangeTitle(number):
+
+    message = 'Not Forging: {number}'.format(number=number)
+
+    resp = messengers.Discord_channel_data(discord_config, message)
+
+    print('\n Discord title: ' + str(resp))

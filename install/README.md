@@ -1,4 +1,4 @@
-# GoGreen bot v 0.2.0
+# GoGreen Notifier
 ## Installation Guide
 
 1. Clone this repository to your server:
@@ -31,7 +31,7 @@ crontab -e
 ```
 > Copy and paste:
 ```
-# Start GoGreen Bot every 15 minutes
+# Start GoGreen Notifier every 15 minutes
 */15 * * * * python3 ~/go-green/bot.py >> ~/go-green/bot.log 2>&1
 ```
 

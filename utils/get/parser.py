@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Copyright (c) 2018-2019 Mx (Shift Project delegate / 4446910057799968777S)
 # Licensed under MIT License <see LICENSE file>
 
 import time
@@ -21,7 +21,7 @@ options.add_argument('disable-infobars')
 options.add_argument('--disable-extensions')
 options.add_argument('--disable-dev-shm-usage')
 
-# number_of_delegates = config.active_delegates
+windows = config.os_windows
 
 
 def DelegatesRedAndOrange(url, max_attempts, options=options):
@@ -67,18 +67,20 @@ def DelegatesRedAndOrange(url, max_attempts, options=options):
     url += '/delegateMonitor'
 
     delegates_table = {}
+    delegates_active = {}
     attempt = 0
 
     for i in range(max_attempts):
         try:
-            # For Windows
-#             driver = webdriver.Chrome(chrome_options=options)
-
-            # For Linux
-            driver = webdriver.Chrome(
-                chrome_options=options,
-                executable_path=r'/usr/local/bin/chromedriver'
-            )
+            if windows:
+                # For Windows
+                driver = webdriver.Chrome(chrome_options=options)
+            else:
+                # For Linux
+                driver = webdriver.Chrome(
+                    chrome_options=options,
+                    executable_path=r'/usr/local/bin/chromedriver'
+                )
 
             actions = ActionChains(driver)
             driver.get(url)
@@ -95,9 +97,22 @@ def DelegatesRedAndOrange(url, max_attempts, options=options):
             """
             Waiting for explorer to be shure there all is okay
             Sometimes explorer shows delegates_table as "Missed block"
-            or "Not forging" when it's not after fast loading.
+            or "Not forging" after fast loading while it's not.
             """
             time.sleep(3)
+
+            if attempt > 2:
+                time.sleep(17)
+
+            for i in range(1, 102):
+                elem = driver.find_element_by_xpath(
+                    '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
+                    '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[2]/a'
+                    .format(i)
+                ).get_attribute("innerHTML")
+                delegates_active[i] = str(elem)
+
+                actions.reset_actions()
 
             missed_block_total_elem = driver.find_element_by_xpath(
                 '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]/div'
@@ -149,7 +164,7 @@ def DelegatesRedAndOrange(url, max_attempts, options=options):
                 delegates_table[i]['NextTurn'] = '45 min'
                 # Trying to avoid error:
                 # Message: no such element: Unable to locate element
-                delegates_table[i]['lastBlockTime'] = '0 hours ago'
+                delegates_table[i]['lastBlockTime'] = '∞ ago'
 
                 elem = driver.find_element_by_xpath(
                     '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
@@ -187,14 +202,22 @@ def DelegatesRedAndOrange(url, max_attempts, options=options):
                     '/td[6]/i'.format(i)
                 )
                 actions.move_to_element(element_to_hover_over).perform()
-                elem = driver.find_element_by_xpath(
-                    '//*[@id="wrap"]/section/div/delegate-monitor/div/div[5]'
-                    '/div/div/div/div[1]/div[3]/table/tbody[2]/tr[{0}]/td[6]'
-                    '/div/div[2]'.format(i)
-                ).get_attribute("innerHTML")
-                delegates_table[i]['lastBlockTime'] = (
-                    str(elem).split('<br>')[2]
-                )
+                # Trying to avoid error:
+                # 'Message: no such element: Unable to locate element:'
+                time.sleep(1)
+                try:
+                    elem = driver.find_element_by_xpath(
+                        '//*[@id="wrap"]/section/div/'
+                        'delegate-monitor/div/div[5]'
+                        '/div/div/div/div[1]/div[3]/'
+                        'table/tbody[2]/tr[{0}]/td[6]'
+                        '/div/div[2]'.format(i)
+                    ).get_attribute("innerHTML")
+                    delegates_table[i]['lastBlockTime'] = (
+                        str(elem).split('<br>')[2]
+                    )
+                except:
+                    delegates_table[i]['lastBlockTime'] = 'undefined'
 
                 actions.reset_actions()
             break
@@ -215,4 +238,44 @@ def DelegatesRedAndOrange(url, max_attempts, options=options):
             except:
                 pass
 
-    return delegates_table
+    return delegates_table, delegates_active, attempt
+
+
+# Checking explorers` online
+# explorer_online = check.isOnline(url, 3, 5)
+# explorer_mirror_online = check.isOnline(url_mirror, 3, 5)
+
+# if 'explorers' not in last_msg:
+#     last_msg['explorers'] = {}
+#     last_msg['explorers']['online'] = True
+
+# if double_checking and (not explorer_online or not explorer_mirror_online):
+
+#     last_msg, delay = check.explorersTimeout(last_msg)
+#     last_msg['explorers']['online'] = False
+
+#     if not delay:
+#         send.explorersBadMessage(
+#             last_msg, url, url_mirror, explorer_online,
+#             explorer_mirror_online
+#         )
+
+#     message_explorers = send.formingExplorersMessage(
+#         url, url_mirror, explorer_online, explorer_mirror_online,
+#         'telegram',
+#     )
+#     send.TelegramDebug(message_explorers, 'Explorers')
+
+#     # Saving data to a file
+#     with open(LAST_MSG_PATH, mode='w', encoding='utf-8') as f:
+#         json.dump(last_msg, f)
+
+#     # Exit from the script
+#     raise SystemExit
+
+# # Sending a good message if both explorers is online now
+# if not last_msg['explorers']['online']:
+#     last_msg = send.explorersGoodMessage(
+#             last_msg, url, url_mirror, explorer_online,
+#             explorer_mirror_online
+#         )

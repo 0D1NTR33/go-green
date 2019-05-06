@@ -1,4 +1,4 @@
-# Copyright (c) 2018 Mx (Shift Project delegate / 4446910057799968777S)
+# Copyright (c) 2018-2019 Mx (Shift Project delegate / 4446910057799968777S)
 # Licensed under MIT License <see LICENSE file>
 
 import json
@@ -14,6 +14,7 @@ start_time = check.TimeStamp()
 DIR_PATH = path.abspath(path.dirname(__file__))
 USERNAMES_PATH = path.join(DIR_PATH, 'data', 'usernames.json')
 LAST_MSG_PATH = path.join(DIR_PATH, 'data', 'last_msg.json')
+ACTIVE_DELEGATES_PATH = path.join(DIR_PATH, 'data', 'active_delegates.json')
 
 with open(USERNAMES_PATH, 'r', encoding='utf-8') as f:
     usernames = json.load(f)
@@ -26,59 +27,48 @@ try:
 except:
     pass
 
+# Trying to open active_delegates.json file even it's empty
+try:
+    previous_active_delegates = {}
+    with open(ACTIVE_DELEGATES_PATH, 'r', encoding='utf-8') as f:
+        previous_active_delegates = json.load(f)
+except:
+    pass
+
 url = config.explorer[0]
 url_mirror = config.explorer[1]
 timeout = config.timeout
 
-double_checking = True
-max_attempts = 10
+max_attempts = 4
 
 """ Main script """
 
 try:
-    # Checking explorers` online
-    explorer_online = check.isOnline(url, 3, 5)
-    explorer_mirror_online = check.isOnline(url_mirror, 3, 5)
+    # Scraping delegates info
+    (
+        delegates, active_delegates, attempt
+    ) = get.DelegatesRedAndOrange(url, max_attempts)
 
-    if 'explorers' not in last_msg:
-        last_msg['explorers'] = {}
-        last_msg['explorers']['online'] = True
+    (
+        delegates_mirror, active_delegates_mirror, attempt_mirror
+    ) = get.DelegatesRedAndOrange(url_mirror, max_attempts)
 
-    if double_checking and (not explorer_online or not explorer_mirror_online):
+    # Checking for successful scraping
+    if (attempt == max_attempts) and (attempt_mirror == max_attempts):
+        raise Exception("Scraping failed")
 
-        last_msg, delay = check.explorersTimeout(last_msg)
-        last_msg['explorers']['online'] = False
+    # Checking for explorers' online
+    # Need to be improved (timer for reccuring messages, back online message)
+    else:
+        if attempt == max_attempts:
+            message_explorer = ('Explorer is offline: ' + url)
+            send.TelegramDebug(message_explorer, 'Alert', False)
 
-        if not delay:
-            send.explorersBadMessage(
-                last_msg, url, url_mirror, explorer_online,
-                explorer_mirror_online
-            )
-
-        message_explorers = send.formingExplorersMessage(
-            url, url_mirror, explorer_online, explorer_mirror_online,
-            'telegram',
-        )
-        send.TelegramDebug(message_explorers, 'Explorers')
-
-        # Saving data to a file
-        with open(LAST_MSG_PATH, mode='w', encoding='utf-8') as f:
-            json.dump(last_msg, f)
-
-        # Exit from the script
-        raise SystemExit
-
-    # Sending a good message if both explorers is online now
-    if not last_msg['explorers']['online']:
-        last_msg = send.explorersGoodMessage(
-                last_msg, url, url_mirror, explorer_online,
-                explorer_mirror_online
-            )
+        if attempt_mirror == max_attempts:
+            message_explorer = ('Explorer is offline: ' + url_mirror)
+            send.TelegramDebug(message_explorer, 'Alert', False)
 
     # Checking delegates
-    delegates = get.DelegatesRedAndOrange(url, max_attempts)
-    delegates_mirror = get.DelegatesRedAndOrange(url_mirror, max_attempts)
-
     for i in delegates:
         delay = True
         fake = False
@@ -115,6 +105,27 @@ try:
     for n in to_del:
         del last_msg[n]
 
+    # Adding a number of not forging or missed blocks delegates
+    # to a Discord audio channel title
+    send.ChangeTitle(len(last_msg))
+
+    # Checking in and out delegates
+    synchronized = (active_delegates == active_delegates_mirror)
+
+    if previous_active_delegates and synchronized:
+        for d in previous_active_delegates:
+            if previous_active_delegates[d] not in active_delegates.values():
+                delegate_name = previous_active_delegates[d]
+                send.forgersMessage(delegate_name, 'out')
+
+        for d in active_delegates:
+            if active_delegates[d] not in previous_active_delegates.values():
+                delegate_name = active_delegates[d]
+                send.forgersMessage(delegate_name, 'in')
+
+    if synchronized:
+        previous_active_delegates = active_delegates
+
     # Logs
     message_debug = check.Logs(
         delegates, delegates_mirror, start_time, last_msg
@@ -129,3 +140,7 @@ finally:
     # Saving last messages to a file
     with open(LAST_MSG_PATH, mode='w', encoding='utf-8') as f:
         json.dump(last_msg, f)
+
+    # Saving active delegates to a file
+    with open(ACTIVE_DELEGATES_PATH, mode='w', encoding='utf-8') as f:
+        json.dump(previous_active_delegates, f)

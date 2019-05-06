@@ -1,5 +1,8 @@
 """ Config file """
 
+# If used on Windows set True
+os_windows = False
+
 """
 Atm you can't check is explorer synchronised or not.
 Therefore, for a double-checking uses 2 explorers.
@@ -26,7 +29,7 @@ Script running once in 15 minutes.
 Recurring message will be sent every 6 hours.
 """
 # Delay for recurring messages
-timeout = 3
+timeout = 92
 
 """
 'Next time turn' threshold delay for sending message.
@@ -85,19 +88,37 @@ Bot should be added to the forum manually.
 # Ryver data for posting messages
 ryver = {
     'enabled': False,
-    'projectName': 'shiftnrg',
-    'forumID': '1094320',
+    'projectName': '',
+    'forumID': '',
     'login': '',
     'password': ''
+}
+
+"""
+Discord bot.
+'authKey' - bot's autentification token.
+'channelID' - ID of a Discord channel to send messages.
+'audioChannelId' - ID of a Discord audio channel
+to send number of not forging delegates.
+"""
+
+# Discord settings
+discord = {
+    'enabled': False,
+    'authKey': '',
+    'channelID': '504374478332231710',
+    'audioChannelId': '574524636356935710'
 }
 
 """
 Discord webhook url.
 You can setup it in you server settings.
 Server Settings -> Webhooks -> Create Webhook
+Depreciated.
 """
-# Discord settings
-discord = {
+
+# Depreciated
+discord_wh = {
     'enabled': False,
     'webhook_url': ''
 }
