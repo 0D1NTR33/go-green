@@ -217,7 +217,7 @@ def DelegatesRedAndOrange(url, max_attempts, options=options):
                         str(elem).split('<br>')[2]
                     )
                 except:
-                    delegates_table[i]['lastBlockTime'] = 'undefined'
+                    delegates_table[i]['lastBlockTime'] = 'undefined ago'
 
                 actions.reset_actions()
             break
